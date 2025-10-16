@@ -1,0 +1,96 @@
+﻿@using aDealerEDVMS.Repository.ToanHH.Models
+@using aDealerEDVMS.Service.ToanHH
+@inject IServiceProviders ServiceProviders
+@page "/dealers"
+@rendermode InteractiveServer
+
+<PageTitle>Dealer List</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Danh Sách Đại Lý</h3>
+    <a href="/dealers/create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Thêm Đại Lý Mới
+    </a>
+</div>
+
+@if (dealers == null)
+{
+    <p><em>Đang tải dữ liệu...</em></p>
+}
+else if (!dealers.Any())
+{
+    <p><em>Không có dữ liệu đại lý.</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Mã Đại Lý</th>
+                    <th>Tên Đại Lý</th>
+                    <th>Địa Chỉ</th>
+                    <th>Điện Thoại</th>
+                    <th>Email</th>
+                    <th>Ngày Thành Lập</th>
+                    <th>Số Nhân Viên</th>
+                    <th>Đánh Giá</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dealer in dealers)
+                {
+                    <tr>
+                        <td>@dealer.DealerId</td>
+                        <td>@dealer.DealerCode</td>
+                        <td>@dealer.DealerName</td>
+                        <td>@dealer.Address</td>
+                        <td>@dealer.Phone</td>
+                        <td>@dealer.Email</td>
+                        <td>@(dealer.EstablishedDate?.ToString("dd/MM/yyyy") ?? "N/A")</td>
+                        <td>@(dealer.TotalStaff?.ToString() ?? "N/A")</td>
+                        <td>
+                            @if (dealer.Rating.HasValue)
+                            {
+                                <span class="badge bg-warning text-dark">@dealer.Rating.Value.ToString("0.0") ⭐</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa có</span>
+                            }
+                        </td>
+                        <td>
+                            @if (dealer.IsActive == true)
+                            {
+                                <span class="badge bg-success">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Không hoạt động</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<DealersHht>? dealers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            dealers = await ServiceProviders.DealersHhtService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dealers: {ex.Message}");
+            dealers = new List<DealersHht>();
+        }
+    }
+}

@@ -1,0 +1,170 @@
+﻿@using aDealerEDVMS.Repository.ToanHH.Models
+@using aDealerEDVMS.Service.ToanHH
+@inject IServiceProviders ServiceProviders
+@inject NavigationManager Navigation
+@page "/dealers/create"
+@rendermode InteractiveServer
+
+<PageTitle>Thêm Đại Lý Mới</PageTitle>
+
+<h3 class="mb-4">Thêm Đại Lý Mới</h3>
+
+<EditForm Model="@dealer" OnValidSubmit="@HandleValidSubmit" class="needs-validation">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="dealerCode" class="form-label">Mã Đại Lý <span class="text-danger">*</span></label>
+                <InputText id="dealerCode" class="form-control" @bind-Value="dealer.DealerCode" />
+                <ValidationMessage For="@(() => dealer.DealerCode)" />
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="dealerName" class="form-label">Tên Đại Lý <span class="text-danger">*</span></label>
+                <InputText id="dealerName" class="form-control" @bind-Value="dealer.DealerName" />
+                <ValidationMessage For="@(() => dealer.DealerName)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="address" class="form-label">Địa Chỉ <span class="text-danger">*</span></label>
+        <InputText id="address" class="form-control" @bind-Value="dealer.Address" />
+        <ValidationMessage For="@(() => dealer.Address)" />
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="phone" class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
+                <InputText id="phone" class="form-control" @bind-Value="dealer.Phone" />
+                <ValidationMessage For="@(() => dealer.Phone)" />
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <InputText id="email" type="email" class="form-control" @bind-Value="dealer.Email" />
+                <ValidationMessage For="@(() => dealer.Email)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="establishedDate" class="form-label">Ngày Thành Lập</label>
+                <InputDate id="establishedDate" class="form-control" @bind-Value="establishedDate" />
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="totalStaff" class="form-label">Số Nhân Viên</label>
+                <InputNumber id="totalStaff" class="form-control" @bind-Value="dealer.TotalStaff" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="rating" class="form-label">Đánh Giá (0-5)</label>
+                <InputNumber id="rating" class="form-control" @bind-Value="dealer.Rating" step="0.1" min="0" max="5" />
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="createdBy" class="form-label">Người Tạo (ID) <span class="text-danger">*</span></label>
+                <InputNumber id="createdBy" class="form-control" @bind-Value="dealer.CreatedBy" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check">
+            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="isActive" />
+            <label class="form-check-label" for="isActive">
+                Đại Lý Đang Hoạt Động
+            </label>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success" role="alert">
+            @successMessage
+        </div>
+    }
+
+    <div class="mb-3">
+        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>Đang xử lý...</span>
+            }
+            else
+            {
+                <span>Lưu</span>
+            }
+        </button>
+        <a href="/dealers" class="btn btn-secondary ms-2">Hủy</a>
+    </div>
+</EditForm>
+
+@code {
+    private DealersHht dealer = new DealersHht();
+    private DateTime? establishedDate;
+    private bool isActive = true;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            // Convert DateTime? to DateOnly?
+            if (establishedDate.HasValue)
+            {
+                dealer.EstablishedDate = DateOnly.FromDateTime(establishedDate.Value);
+            }
+
+            dealer.IsActive = isActive;
+
+            await ServiceProviders.DealersHhtService.CreateAsync(dealer);
+
+            successMessage = "Thêm đại lý thành công!";
+            
+            // Redirect sau 2 giây
+            await Task.Delay(2000);
+            Navigation.NavigateTo("/dealers");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Lỗi khi thêm đại lý: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}
