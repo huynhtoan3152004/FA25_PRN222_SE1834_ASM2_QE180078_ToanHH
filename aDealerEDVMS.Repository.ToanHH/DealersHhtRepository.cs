@@ -36,5 +36,16 @@ namespace aDealerEDVMS.Repository.ToanHH
 
             return items ?? new List<DealersHht>();
         }
+
+        public async Task<int> CreateAsync(DealersHht dealer)
+        {
+            // ❌ KHÔNG làm: dealer.DealerId = 1;
+            
+            // ✅ Chỉ cần add vào context
+            await _context.DealersHhts.AddAsync(dealer);
+            
+            // DealerId sẽ được database tự động generate sau khi SaveChanges
+            return 1;
+        }
     }
 }

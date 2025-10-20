@@ -17,7 +17,7 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="dealerCode" class="form-label">Mã Đại Lý <span class="text-danger">*</span></label>
-                <InputText id="dealerCode" class="form-control" @bind-Value="dealer.DealerCode" />
+                <InputText id="dealerCode" class="form-control" @bind-Value="dealer.DealerCode" placeholder="Nhập mã đại lý" />
                 <ValidationMessage For="@(() => dealer.DealerCode)" />
             </div>
         </div>
@@ -25,7 +25,7 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="dealerName" class="form-label">Tên Đại Lý <span class="text-danger">*</span></label>
-                <InputText id="dealerName" class="form-control" @bind-Value="dealer.DealerName" />
+                <InputText id="dealerName" class="form-control" @bind-Value="dealer.DealerName" placeholder="Nhập tên đại lý" />
                 <ValidationMessage For="@(() => dealer.DealerName)" />
             </div>
         </div>
@@ -33,7 +33,7 @@
 
     <div class="mb-3">
         <label for="address" class="form-label">Địa Chỉ <span class="text-danger">*</span></label>
-        <InputText id="address" class="form-control" @bind-Value="dealer.Address" />
+        <InputText id="address" class="form-control" @bind-Value="dealer.Address" placeholder="Nhập địa chỉ" />
         <ValidationMessage For="@(() => dealer.Address)" />
     </div>
 
@@ -41,7 +41,7 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="phone" class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
-                <InputText id="phone" class="form-control" @bind-Value="dealer.Phone" />
+                <InputText id="phone" class="form-control" @bind-Value="dealer.Phone" placeholder="Nhập số điện thoại" />
                 <ValidationMessage For="@(() => dealer.Phone)" />
             </div>
         </div>
@@ -49,7 +49,7 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                <InputText id="email" type="email" class="form-control" @bind-Value="dealer.Email" />
+                <InputText id="email" type="email" class="form-control" @bind-Value="dealer.Email" placeholder="Nhập email" />
                 <ValidationMessage For="@(() => dealer.Email)" />
             </div>
         </div>
@@ -66,25 +66,14 @@
         <div class="col-md-6">
             <div class="mb-3">
                 <label for="totalStaff" class="form-label">Số Nhân Viên</label>
-                <InputNumber id="totalStaff" class="form-control" @bind-Value="dealer.TotalStaff" />
+                <InputNumber id="totalStaff" class="form-control" @bind-Value="dealer.TotalStaff" placeholder="Nhập số nhân viên" />
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="rating" class="form-label">Đánh Giá (0-5)</label>
-                <InputNumber id="rating" class="form-control" @bind-Value="dealer.Rating" step="0.1" min="0" max="5" />
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="createdBy" class="form-label">Người Tạo (ID) <span class="text-danger">*</span></label>
-                <InputNumber id="createdBy" class="form-control" @bind-Value="dealer.CreatedBy" />
-            </div>
-        </div>
+    <div class="mb-3">
+        <label for="rating" class="form-label">Đánh Giá (0-5)</label>
+        <InputNumber id="rating" class="form-control" @bind-Value="dealer.Rating" step="0.1" min="0" max="5" placeholder="Nhập đánh giá" />
     </div>
 
     <div class="mb-3">
@@ -142,25 +131,89 @@
 
         try
         {
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(dealer.DealerCode))
+            {
+                errorMessage = "Mã đại lý không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.DealerName))
+            {
+                errorMessage = "Tên đại lý không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.Address))
+            {
+                errorMessage = "Địa chỉ không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.Phone))
+            {
+                errorMessage = "Số điện thoại không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.Email))
+            {
+                errorMessage = "Email không được để trống!";
+                return;
+            }
+
             // Convert DateTime? to DateOnly?
             if (establishedDate.HasValue)
             {
                 dealer.EstablishedDate = DateOnly.FromDateTime(establishedDate.Value);
             }
 
+            // Set IsActive
             dealer.IsActive = isActive;
 
-            await ServiceProviders.DealersHhtService.CreateAsync(dealer);
+            // Set CreatedBy to default value
+            dealer.CreatedBy = 1;
 
-            successMessage = "Thêm đại lý thành công!";
+            // FIX: Set LastAudit to current datetime (không cho phép NULL)
+            dealer.LastAudit = DateTime.Now;
+
+            Console.WriteLine($"=== Form Submit ===");
+            Console.WriteLine($"Attempting to create dealer: {dealer.DealerCode} - {dealer.DealerName}");
             
-            // Redirect sau 2 giây
-            await Task.Delay(2000);
-            Navigation.NavigateTo("/dealers");
+            // Call service to create dealer
+            var result = await ServiceProviders.DealersHhtService.CreateAsync(dealer);
+            
+            Console.WriteLine($"Create result: {result}");
+
+            if (result > 0)
+            {
+                successMessage = "Thêm đại lý thành công!";
+                
+                // Redirect sau 2 giây
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/dealers");
+            }
+            else
+            {
+                errorMessage = "Không thể thêm đại lý. Vui lòng thử lại!";
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Lỗi khi thêm đại lý: {ex.Message}";
+            // Hiển thị lỗi chi tiết
+            var innerMessage = ex.InnerException?.Message ?? ex.Message;
+            var innerInnerMessage = ex.InnerException?.InnerException?.Message ?? "";
+            
+            errorMessage = $"Lỗi: {innerMessage}";
+            if (!string.IsNullOrEmpty(innerInnerMessage))
+            {
+                errorMessage += $"\nChi tiết: {innerInnerMessage}";
+            }
+            
+            Console.WriteLine($"=== Form Error ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"Inner: {ex.InnerException?.Message}");
+            Console.WriteLine($"Stack: {ex.StackTrace}");
         }
         finally
         {

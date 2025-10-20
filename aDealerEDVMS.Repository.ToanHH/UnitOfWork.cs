@@ -49,24 +49,23 @@ namespace aDealerEDVMS.Repository.ToanHH
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _context?.Dispose();
         }
 
         public int SaveChangesWithTransaction()
         {
             int result = 0;
 
-            //System.Data.IsolationLevel.Snapshot
             using (var dbContextTransaction = _context.Database.BeginTransaction())
             {
                 try
                 {
                     result = _context.SaveChanges();
-                    dbContextTransaction.Commit();
+                    dbContextTransaction.Commit(); // FIX: Đây phải là await trong async
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    //Log Exception Handling message                      
+                    Console.WriteLine($"Transaction error: {ex.Message}");
                     result = -1;
                     dbContextTransaction.Rollback();
                 }
@@ -79,19 +78,22 @@ namespace aDealerEDVMS.Repository.ToanHH
         {
             int result = -1;
 
-            //System.Data.IsolationLevel.Snapshot
-            using (var dbContextTransaction = _context.Database.BeginTransaction())
+            using (var dbContextTransaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
                     result = await _context.SaveChangesAsync();
-                    dbContextTransaction.Commit();
+                    await dbContextTransaction.CommitAsync(); // FIX: Phải là CommitAsync
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    //Log Exception Handling message                      
+                    Console.WriteLine($"Transaction error: {ex.Message}");
+                    if (ex.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    }
                     result = -1;
-                    dbContextTransaction.Rollback();
+                    await dbContextTransaction.RollbackAsync(); // FIX: Phải là RollbackAsync
                 }
             }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace aDealerEDVMS.Service.ToanHH
 {
-    public interface IServiceProviders
+    public interface IServiceProviders : IDisposable
     {
         SystemUserAccountService SystemUserAccountService { get; }
         DearlerHhtService DealersHhtService { get; }
@@ -32,6 +32,11 @@ namespace aDealerEDVMS.Service.ToanHH
         public DealerContractsHhtService DealerContractsHhtService
         {
             get { return _dealerContractsHhtService ??= new DealerContractsHhtService(); }
+        }
+
+        public void Dispose()
+        {
+            // Cleanup if needed
         }
     }
 }
