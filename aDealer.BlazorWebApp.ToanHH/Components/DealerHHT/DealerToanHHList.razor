@@ -1,6 +1,7 @@
 ﻿@using aDealerEDVMS.Repository.ToanHH.Models
 @using aDealerEDVMS.Service.ToanHH
 @inject IServiceProviders ServiceProviders
+@inject NavigationManager Navigation
 @page "/dealers"
 @rendermode InteractiveServer
 
@@ -9,22 +10,45 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h3>Danh Sách Đại Lý</h3>
     <a href="/dealers/create" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Thêm Đại Lý Mới
+        <i class="bi bi-plus-circle me-2"></i>Thêm Đại Lý Mới
     </a>
 </div>
 
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>@message
+        <button type="button" class="btn-close" @onclick="() => message = null"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+    </div>
+}
+
 @if (dealers == null)
 {
-    <p><em>Đang tải dữ liệu...</em></p>
+    <div class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3"><em>Đang tải dữ liệu...</em></p>
+    </div>
 }
 else if (!dealers.Any())
 {
-    <p><em>Không có dữ liệu đại lý.</em></p>
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>Không có dữ liệu đại lý.
+    </div>
 }
 else
 {
     <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover align-middle">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
@@ -37,24 +61,27 @@ else
                     <th>Số Nhân Viên</th>
                     <th>Đánh Giá</th>
                     <th>Trạng Thái</th>
+                    <th style="width: 120px;" class="text-center">Thao Tác</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var dealer in dealers)
                 {
                     <tr>
-                        <td>@dealer.DealerId</td>
-                        <td>@dealer.DealerCode</td>
+                        <td><strong>@dealer.DealerId</strong></td>
+                        <td><span class="badge bg-info text-dark">@dealer.DealerCode</span></td>
                         <td>@dealer.DealerName</td>
                         <td>@dealer.Address</td>
-                        <td>@dealer.Phone</td>
-                        <td>@dealer.Email</td>
+                        <td><i class="bi bi-telephone me-1"></i>@dealer.Phone</td>
+                        <td><i class="bi bi-envelope me-1"></i>@dealer.Email</td>
                         <td>@(dealer.EstablishedDate?.ToString("dd/MM/yyyy") ?? "N/A")</td>
-                        <td>@(dealer.TotalStaff?.ToString() ?? "N/A")</td>
+                        <td class="text-center">@(dealer.TotalStaff?.ToString() ?? "N/A")</td>
                         <td>
                             @if (dealer.Rating.HasValue)
                             {
-                                <span class="badge bg-warning text-dark">@dealer.Rating.Value.ToString("0.0") ⭐</span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-star-fill me-1"></i>@dealer.Rating.Value.ToString("0.0")
+                                </span>
                             }
                             else
                             {
@@ -64,12 +91,23 @@ else
                         <td>
                             @if (dealer.IsActive == true)
                             {
-                                <span class="badge bg-success">Hoạt động</span>
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Hoạt động
+                                </span>
                             }
                             else
                             {
-                                <span class="badge bg-secondary">Không hoạt động</span>
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Không hoạt động
+                                </span>
                             }
+                        </td>
+                        <td class="text-center">
+                            <a href="/dealers/detail/@dealer.DealerId" 
+                               class="btn btn-sm btn-info text-white" 
+                               title="Chi tiết">
+                                <i class="bi bi-eye me-1"></i>Chi Tiết
+                            </a>
                         </td>
                     </tr>
                 }
@@ -78,10 +116,49 @@ else
     </div>
 }
 
+<style>
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn-info.text-white:hover {
+        background-color: #0ca5c7;
+        border-color: #0b95b5;
+    }
+
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+
+    .alert {
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: #198754;
+    }
+
+    .alert-danger {
+        border-left-color: #dc3545;
+    }
+
+    .alert-info {
+        border-left-color: #0dcaf0;
+    }
+</style>
+
 @code {
     private List<DealersHht>? dealers;
+    private string? message;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadDealers();
+    }
+
+    private async Task LoadDealers()
     {
         try
         {
@@ -90,6 +167,7 @@ else
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading dealers: {ex.Message}");
+            errorMessage = "Không thể tải danh sách đại lý!";
             dealers = new List<DealersHht>();
         }
     }

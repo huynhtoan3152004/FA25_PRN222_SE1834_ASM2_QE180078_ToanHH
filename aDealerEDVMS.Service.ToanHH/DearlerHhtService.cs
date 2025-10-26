@@ -101,23 +101,114 @@ namespace aDealerEDVMS.Service.ToanHH
             }
         }
 
+        public async Task<int> UpdateAsync(DealersHht dealer)
+        {
+            try
+            {
+                Console.WriteLine("=== Starting UpdateAsync in Service ===");
+                Console.WriteLine($"Dealer ID: {dealer.DealerId}");
+                Console.WriteLine($"DealerCode: {dealer.DealerCode}");
+                Console.WriteLine($"DealerName: {dealer.DealerName}");
+                Console.WriteLine($"Address: {dealer.Address}");
+                Console.WriteLine($"Phone: {dealer.Phone}");
+                Console.WriteLine($"Email: {dealer.Email}");
+                
+                // Set LastAudit
+                dealer.LastAudit = DateTime.Now;
+                Console.WriteLine($"LastAudit set to: {dealer.LastAudit}");
+                
+                // Update dealer
+                await _unitOfWork.DealersHhtRepository.UpdateAsync(dealer);
+                
+                Console.WriteLine("Dealer updated in repository, now saving...");
+                
+                // Save changes
+                var result = await _unitOfWork.SaveChangesWithTransactionAsync();
+                
+                Console.WriteLine($"Save result: {result}");
+                
+                if (result > 0)
+                {
+                    Console.WriteLine($"Dealer updated successfully: {dealer.DealerId}");
+                    return dealer.DealerId;
+                }
+                
+                Console.WriteLine("Failed to update dealer - no records affected");
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"=== Error in UpdateAsync ===");
+                Console.WriteLine($"Error message: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner inner exception: {ex.InnerException.InnerException.Message}");
+                    }
+                }
+                throw;
+            }
+        }
+
         public async Task<bool> DeleteAsync(int dealerId)
         {
             try
             {
+                Console.WriteLine("=== Starting DeleteAsync in Service ===");
+                Console.WriteLine($"Dealer ID to delete: {dealerId}");
+                
+                // Get dealer first
                 var dealer = await _unitOfWork.DealersHhtRepository.GetByIdAsync(dealerId);
-                if (dealer != null)
+                
+                if (dealer == null)
                 {
-                    await _unitOfWork.DealersHhtRepository.RemoveAsync(dealer);
-                    var result = await _unitOfWork.SaveChangesWithTransactionAsync();
-                    return result > 0;
+                    Console.WriteLine($"Dealer not found with ID: {dealerId}");
+                    return false;
                 }
+
+                Console.WriteLine($"Dealer found: {dealer.DealerCode} - {dealer.DealerName}");
+                
+                // Remove dealer
+                await _unitOfWork.DealersHhtRepository.RemoveAsync(dealer);
+                
+                Console.WriteLine("Dealer removed from repository, now saving...");
+                
+                // Save changes
+                var result = await _unitOfWork.SaveChangesWithTransactionAsync();
+                
+                Console.WriteLine($"Save result: {result}");
+                
+                if (result > 0)
+                {
+                    Console.WriteLine($"Dealer deleted successfully: {dealerId}");
+                    return true;
+                }
+                
+                Console.WriteLine("Failed to delete dealer - no records affected");
+                return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error deleting dealer: {ex.Message}");
+                Console.WriteLine($"=== Error in DeleteAsync ===");
+                Console.WriteLine($"Error message: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    
+                    if (ex.InnerException.InnerException != null)
+                    {
+                        Console.WriteLine($"Inner inner exception: {ex.InnerException.InnerException.Message}");
+                    }
+                }
+                throw;
             }
-            return false;
         }
 
         public async Task<List<DealersHht>> SearchAsync(string dealerName, decimal rating, string address)
@@ -130,26 +221,6 @@ namespace aDealerEDVMS.Service.ToanHH
             {
                 Console.WriteLine($"Error searching dealers: {ex.Message}");
                 return new List<DealersHht>();
-            }
-        }
-
-        public async Task<int> UpdateAsync(DealersHht dealer)
-        {
-            try
-            {
-                await _unitOfWork.DealersHhtRepository.UpdateAsync(dealer);
-                var result = await _unitOfWork.SaveChangesWithTransactionAsync();
-                
-                if (result > 0)
-                {
-                    return dealer.DealerId;
-                }
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating dealer: {ex.Message}");
-                throw;
             }
         }
     }

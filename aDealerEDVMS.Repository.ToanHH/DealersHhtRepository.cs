@@ -24,7 +24,7 @@ namespace aDealerEDVMS.Repository.ToanHH
         public async Task<DealersHht> GetByIdAsync(int dealerId)
         {
             var dealer = await _context.DealersHhts.FirstOrDefaultAsync(d => d.DealerId == dealerId);
-            return dealer ?? new DealersHht();
+            return dealer;
         }
 
         // Tìm kiếm đại lý theo tên
@@ -46,6 +46,44 @@ namespace aDealerEDVMS.Repository.ToanHH
             
             // DealerId sẽ được database tự động generate sau khi SaveChanges
             return 1;
+        }
+
+        // ✅ THÊM METHOD UPDATE
+        public async Task UpdateAsync(DealersHht dealer)
+        {
+            Console.WriteLine($"=== UpdateAsync in Repository ===");
+            Console.WriteLine($"Updating dealer ID: {dealer.DealerId}");
+            
+            // Attach entity và mark as Modified
+            var existingDealer = await _context.DealersHhts.FindAsync(dealer.DealerId);
+            
+            if (existingDealer != null)
+            {
+                // Update properties
+                _context.Entry(existingDealer).CurrentValues.SetValues(dealer);
+                Console.WriteLine("Entity marked as modified");
+            }
+            else
+            {
+                Console.WriteLine("Dealer not found in context, using Update method");
+                _context.DealersHhts.Update(dealer);
+            }
+            
+            // KHÔNG gọi SaveChanges ở đây - để UnitOfWork quản lý
+        }
+
+        // ✅ THÊM METHOD REMOVE
+        public async Task RemoveAsync(DealersHht dealer)
+        {
+            Console.WriteLine($"=== RemoveAsync in Repository ===");
+            Console.WriteLine($"Removing dealer ID: {dealer.DealerId}");
+            
+            // Remove from context
+            _context.DealersHhts.Remove(dealer);
+            
+            Console.WriteLine("Entity marked for deletion");
+            
+            // KHÔNG gọi SaveChanges ở đây - để UnitOfWork quản lý
         }
     }
 }

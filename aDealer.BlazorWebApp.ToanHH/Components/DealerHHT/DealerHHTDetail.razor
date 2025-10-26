@@ -1,0 +1,460 @@
+@using aDealerEDVMS.Repository.ToanHH.Models
+@using aDealerEDVMS.Service.ToanHH
+@inject IServiceProviders ServiceProviders
+@inject NavigationManager Navigation
+@page "/dealers/detail/{DealerId:int}"
+@rendermode InteractiveServer
+
+<PageTitle>Chi Tiết Đại Lý</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Chi Tiết Đại Lý</h3>
+    <a href="/dealers" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Quay Lại
+    </a>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center my-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3"><em>Đang tải dữ liệu...</em></p>
+    </div>
+}
+else if (dealer == null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-circle me-2"></i>Không tìm thấy đại lý!
+    </div>
+    <a href="/dealers" class="btn btn-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Quay lại danh sách
+    </a>
+}
+else
+{
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@successMessage
+            <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>@errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+        </div>
+    }
+
+    <EditForm Model="@dealer" OnValidSubmit="@HandleValidSubmit" class="needs-validation">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="dealerCode" class="form-label fw-bold">Mã Đại Lý <span class="text-danger">*</span></label>
+                            <InputText id="dealerCode" class="form-control" @bind-Value="dealer.DealerCode" placeholder="Nhập mã đại lý" />
+                            <ValidationMessage For="@(() => dealer.DealerCode)" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="dealerName" class="form-label fw-bold">Tên Đại Lý <span class="text-danger">*</span></label>
+                            <InputText id="dealerName" class="form-control" @bind-Value="dealer.DealerName" placeholder="Nhập tên đại lý" />
+                            <ValidationMessage For="@(() => dealer.DealerName)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="address" class="form-label fw-bold">Địa Chỉ <span class="text-danger">*</span></label>
+                    <InputText id="address" class="form-control" @bind-Value="dealer.Address" placeholder="Nhập địa chỉ" />
+                    <ValidationMessage For="@(() => dealer.Address)" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Thông Tin Liên Hệ</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="phone" class="form-label fw-bold">Số Điện Thoại <span class="text-danger">*</span></label>
+                            <InputText id="phone" class="form-control" @bind-Value="dealer.Phone" placeholder="Nhập số điện thoại" />
+                            <ValidationMessage For="@(() => dealer.Phone)" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                            <InputText id="email" type="email" class="form-control" @bind-Value="dealer.Email" placeholder="Nhập email" />
+                            <ValidationMessage For="@(() => dealer.Email)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Thông Tin Chi Tiết</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="establishedDate" class="form-label fw-bold">Ngày Thành Lập</label>
+                            <InputDate id="establishedDate" class="form-control" @bind-Value="establishedDate" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="totalStaff" class="form-label fw-bold">Số Nhân Viên</label>
+                            <InputNumber id="totalStaff" class="form-control" @bind-Value="dealer.TotalStaff" placeholder="Nhập số nhân viên" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="rating" class="form-label fw-bold">Đánh Giá (0-5)</label>
+                            <InputNumber id="rating" class="form-control" @bind-Value="dealer.Rating" step="0.1" min="0" max="5" placeholder="Nhập đánh giá" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Trạng Thái</label>
+                            <div class="form-check form-switch">
+                                <InputCheckbox id="isActive" class="form-check-input" @bind-Value="isActive" style="width: 3rem; height: 1.5rem;" />
+                                <label class="form-check-label ms-2" for="isActive">
+                                    @if (isActive)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Đang Hoạt Động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>Không Hoạt Động
+                                        </span>
+                                    }
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-primary btn-lg me-2" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Đang cập nhật...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span>Cập Nhật</span>
+                            }
+                        </button>
+                        <a href="/dealers" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-x-circle me-2"></i>Hủy
+                        </a>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-lg" @onclick="ShowDeleteConfirmation" disabled="@isSubmitting">
+                        <i class="bi bi-trash me-2"></i>Xóa Đại Lý
+                    </button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+}
+
+<!-- Modal xác nhận xóa -->
+@if (showDeleteModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.6);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Xác Nhận Xóa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseDeleteModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="text-center mb-2">Bạn có chắc chắn muốn xóa đại lý</p>
+                    <h5 class="text-center text-danger mb-2">@dealer?.DealerName</h5>
+                    <p class="text-center text-muted">
+                        <i class="bi bi-tag me-1"></i>Mã đại lý: <strong>@dealer?.DealerCode</strong>
+                    </p>
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-info-circle me-2"></i>Hành động này không thể hoàn tác!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            @onclick="CloseDeleteModal" 
+                            disabled="@isDeleting">
+                        <i class="bi bi-x-circle me-1"></i>Hủy
+                    </button>
+                    <button type="button" 
+                            class="btn btn-danger" 
+                            @onclick="ConfirmDelete" 
+                            disabled="@isDeleting">
+                        @if (isDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span>Đang xóa...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-trash me-1"></i>
+                            <span>Xác Nhận Xóa</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+        padding: 1rem 1.5rem;
+    }
+
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        border-bottom: none;
+    }
+
+    .modal-footer {
+        border-top: none;
+        padding-top: 0;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int DealerId { get; set; }
+
+    private DealersHht? dealer;
+    private DateTime? establishedDate;
+    private bool isActive;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private bool showDeleteModal = false;
+    private bool isDeleting = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Console.WriteLine($"=== Loading dealer with ID: {DealerId} ===");
+            
+            dealer = await ServiceProviders.DealersHhtService.GetByIdAsync(DealerId);
+            
+            if (dealer != null)
+            {
+                Console.WriteLine($"Dealer loaded: {dealer.DealerCode} - {dealer.DealerName}");
+                
+                // Load dữ liệu vào form
+                if (dealer.EstablishedDate.HasValue)
+                {
+                    establishedDate = dealer.EstablishedDate.Value.ToDateTime(TimeOnly.MinValue);
+                }
+                isActive = dealer.IsActive ?? true;
+            }
+            else
+            {
+                Console.WriteLine("Dealer not found!");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dealer: {ex.Message}");
+            errorMessage = "Không thể tải thông tin đại lý!";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (dealer == null) return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            Console.WriteLine("=== Starting Update ===");
+            
+            // Convert DateTime? to DateOnly?
+            if (establishedDate.HasValue)
+            {
+                dealer.EstablishedDate = DateOnly.FromDateTime(establishedDate.Value);
+            }
+
+            // Set IsActive
+            dealer.IsActive = isActive;
+
+            // LastAudit sẽ được set trong Service
+            Console.WriteLine($"Updating dealer: ID={dealer.DealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
+            
+            // Gọi UpdateAsync từ Service
+            var result = await ServiceProviders.DealersHhtService.UpdateAsync(dealer);
+            
+            Console.WriteLine($"Update result: {result}");
+
+            if (result > 0)
+            {
+                successMessage = "Cập nhật đại lý thành công!";
+                Console.WriteLine("Update successful!");
+            }
+            else
+            {
+                errorMessage = "Không thể cập nhật đại lý. Vui lòng thử lại!";
+                Console.WriteLine("Update failed - no records affected");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"=== Update Error ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            
+            var innerMessage = ex.InnerException?.Message ?? ex.Message;
+            errorMessage = $"Lỗi: {innerMessage}";
+            
+            if (ex.InnerException?.InnerException != null)
+            {
+                Console.WriteLine($"Inner inner exception: {ex.InnerException.InnerException.Message}");
+                errorMessage += $"\nChi tiết: {ex.InnerException.InnerException.Message}";
+            }
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void ShowDeleteConfirmation()
+    {
+        Console.WriteLine("Show delete confirmation modal");
+        showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        Console.WriteLine("Close delete confirmation modal");
+        showDeleteModal = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (dealer == null) return;
+
+        isDeleting = true;
+        
+        try
+        {
+            Console.WriteLine($"=== Starting Delete ===");
+            Console.WriteLine($"Deleting dealer: ID={dealer.DealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
+            
+            // Gọi DeleteAsync từ Service
+            var result = await ServiceProviders.DealersHhtService.DeleteAsync(dealer.DealerId);
+            
+            Console.WriteLine($"Delete result: {result}");
+            
+            if (result)
+            {
+                Console.WriteLine("Delete successful! Redirecting to list...");
+                // Redirect về list
+                Navigation.NavigateTo("/dealers");
+            }
+            else
+            {
+                Console.WriteLine("Delete failed - no records affected");
+                errorMessage = "Không thể xóa đại lý. Vui lòng thử lại!";
+                CloseDeleteModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"=== Delete Error ===");
+            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"StackTrace: {ex.StackTrace}");
+            
+            errorMessage = $"Lỗi khi xóa đại lý: {ex.Message}";
+            CloseDeleteModal();
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+}
