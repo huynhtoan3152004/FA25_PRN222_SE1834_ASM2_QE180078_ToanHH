@@ -162,21 +162,15 @@ namespace aDealerEDVMS.Service.ToanHH
                 Console.WriteLine("=== Starting DeleteAsync in Service ===");
                 Console.WriteLine($"Dealer ID to delete: {dealerId}");
                 
-                // Get dealer first
-                var dealer = await _unitOfWork.DealersHhtRepository.GetByIdAsync(dealerId);
+                // FIX: Tạo entity mới chỉ với ID, không query từ DB
+                var dealer = new DealersHht { DealerId = dealerId };
                 
-                if (dealer == null)
-                {
-                    Console.WriteLine($"Dealer not found with ID: {dealerId}");
-                    return false;
-                }
-
-                Console.WriteLine($"Dealer found: {dealer.DealerCode} - {dealer.DealerName}");
+                Console.WriteLine($"Created dealer entity for deletion with ID: {dealerId}");
                 
                 // Remove dealer
                 await _unitOfWork.DealersHhtRepository.RemoveAsync(dealer);
                 
-                Console.WriteLine("Dealer removed from repository, now saving...");
+                Console.WriteLine("Dealer marked for removal, now saving...");
                 
                 // Save changes
                 var result = await _unitOfWork.SaveChangesWithTransactionAsync();
