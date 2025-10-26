@@ -24,8 +24,18 @@ namespace aDealerEDVMS.Repository.ToanHH
         // Lấy đại lý theo DealerId
         public async Task<DealersHht> GetByIdAsync(int dealerId)
         {
-            var dealer = await _context.DealersHhts.FirstOrDefaultAsync(d => d.DealerId == dealerId);
-            return dealer;
+            try
+            {
+                // FIX: Thêm AsNoTracking để không track entity khi query
+                return await _context.DealersHhts
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(d => d.DealerId == dealerId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                throw;
+            }
         }
 
         // Tìm kiếm đại lý theo tên
@@ -83,14 +93,40 @@ namespace aDealerEDVMS.Repository.ToanHH
         }
 
         // ✅ METHOD REMOVE
-        public async Task RemoveAsync(DealersHht dealer)
+        public async Task RemoveAsync(DealersHht entity)
         {
-            Console.WriteLine($"=== RemoveAsync in Repository ===");
-            Console.WriteLine($"Removing dealer ID: {dealer.DealerId}");
-            
-            _context.DealersHhts.Remove(dealer);
-            
-            Console.WriteLine("Entity marked for deletion");
+            try
+            {
+                Console.WriteLine($"=== RemoveAsync in Repository ===");
+                Console.WriteLine($"Attempting to remove dealer ID: {entity.DealerId}");
+                
+                // FIX: Kiểm tra xem entity đã được track chưa
+                var trackedEntity = _context.DealersHhts.Local
+                    .FirstOrDefault(d => d.DealerId == entity.DealerId);
+                
+                if (trackedEntity != null)
+                {
+                    Console.WriteLine("Entity already tracked, removing tracked entity");
+                    // Nếu đã có entity được track, xóa entity đó
+                    _context.DealersHhts.Remove(trackedEntity);
+                }
+                else
+                {
+                    Console.WriteLine("Entity not tracked, attaching and removing");
+                    // Nếu chưa được track, attach rồi xóa
+                    _context.DealersHhts.Attach(entity);
+                    _context.DealersHhts.Remove(entity);
+                }
+                
+                Console.WriteLine("Entity marked for deletion");
+                await Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in RemoveAsync: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                throw;
+            }
         }
     }
 }
