@@ -215,7 +215,31 @@ namespace aDealerEDVMS.Service.ToanHH
         {
             try
             {
-                return await _unitOfWork.DealersHhtRepository.SearchAsync(dealerName, rating, address);
+                var allDealers = await _unitOfWork.DealersHhtRepository.GetAllAsync();
+                
+                var query = allDealers.AsQueryable();
+                
+                // Tìm kiếm theo tên đại lý
+                if (!string.IsNullOrWhiteSpace(dealerName))
+                {
+                    query = query.Where(d => d.DealerName.Contains(dealerName, StringComparison.OrdinalIgnoreCase) ||
+                                           d.DealerCode.Contains(dealerName, StringComparison.OrdinalIgnoreCase));
+                }
+                
+                // Tìm kiếm theo địa chỉ
+                if (!string.IsNullOrWhiteSpace(address))
+                {
+                    query = query.Where(d => d.Address != null && 
+                                           d.Address.Contains(address, StringComparison.OrdinalIgnoreCase));
+                }
+                
+                // Tìm kiếm theo rating (>= rating được chọn)
+                if (rating > 0)
+                {
+                    query = query.Where(d => d.Rating.HasValue && d.Rating.Value >= rating);
+                }
+                
+                return query.ToList();
             }
             catch (Exception ex)
             {
