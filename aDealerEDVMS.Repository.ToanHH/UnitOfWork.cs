@@ -1,4 +1,5 @@
 ﻿using aDealerEDVMS.Repository.ToanHH.DBcontext;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,18 +83,43 @@ namespace aDealerEDVMS.Repository.ToanHH
             {
                 try
                 {
+                    Console.WriteLine("=== SaveChangesWithTransactionAsync ===");
+                    
+                    // In ra pending changes
+                    var entries = _context.ChangeTracker.Entries()
+                        .Where(e => e.State != EntityState.Unchanged)
+                        .ToList();
+                    
+                    Console.WriteLine($"Pending changes count: {entries.Count}");
+                    foreach (var entry in entries)
+                    {
+                        Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
+                    }
+                    
                     result = await _context.SaveChangesAsync();
-                    await dbContextTransaction.CommitAsync(); // FIX: Phải là CommitAsync
+                    
+                    Console.WriteLine($"SaveChangesAsync returned: {result}");
+                    
+                    await dbContextTransaction.CommitAsync();
+                    
+                    Console.WriteLine("Transaction committed successfully");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Transaction error: {ex.Message}");
+                    Console.WriteLine($"=== Transaction Error ===");
+                    Console.WriteLine($"Error: {ex.Message}");
+                    Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                    
                     if (ex.InnerException != null)
                     {
                         Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
                     }
+                    
                     result = -1;
-                    await dbContextTransaction.RollbackAsync(); // FIX: Phải là RollbackAsync
+                    await dbContextTransaction.RollbackAsync();
+                    
+                    Console.WriteLine("Transaction rolled back");
+                    throw; // Re-throw để Service biết
                 }
             }
 

@@ -2,6 +2,7 @@
 using aDealerEDVMS.Repository.ToanHH.DBcontext;
 using aDealerEDVMS.Repository.ToanHH.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -48,42 +49,48 @@ namespace aDealerEDVMS.Repository.ToanHH
             return 1;
         }
 
-        // ✅ THÊM METHOD UPDATE
+        // ✅ FIX UPDATE - Dùng AsNoTracking khi load, rồi Attach khi update
         public async Task UpdateAsync(DealersHht dealer)
         {
             Console.WriteLine($"=== UpdateAsync in Repository ===");
             Console.WriteLine($"Updating dealer ID: {dealer.DealerId}");
             
-            // Attach entity và mark as Modified
-            var existingDealer = await _context.DealersHhts.FindAsync(dealer.DealerId);
-            
-            if (existingDealer != null)
+            try
             {
-                // Update properties
-                _context.Entry(existingDealer).CurrentValues.SetValues(dealer);
-                Console.WriteLine("Entity marked as modified");
+                // CÁCH 1: Detach entity cũ nếu có
+                var local = _context.Set<DealersHht>()
+                    .Local
+                    .FirstOrDefault(e => e.DealerId == dealer.DealerId);
+
+                if (local != null)
+                {
+                    Console.WriteLine("Detaching existing tracked entity...");
+                    _context.Entry(local).State = EntityState.Detached;
+                }
+
+                // Attach entity mới và mark as Modified
+                Console.WriteLine("Attaching and marking as Modified...");
+                _context.DealersHhts.Attach(dealer);
+                _context.Entry(dealer).State = EntityState.Modified;
+                
+                Console.WriteLine($"Entity state: {_context.Entry(dealer).State}");
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Dealer not found in context, using Update method");
-                _context.DealersHhts.Update(dealer);
+                Console.WriteLine($"ERROR in UpdateAsync Repository: {ex.Message}");
+                throw;
             }
-            
-            // KHÔNG gọi SaveChanges ở đây - để UnitOfWork quản lý
         }
 
-        // ✅ THÊM METHOD REMOVE
+        // ✅ METHOD REMOVE
         public async Task RemoveAsync(DealersHht dealer)
         {
             Console.WriteLine($"=== RemoveAsync in Repository ===");
             Console.WriteLine($"Removing dealer ID: {dealer.DealerId}");
             
-            // Remove from context
             _context.DealersHhts.Remove(dealer);
             
             Console.WriteLine("Entity marked for deletion");
-            
-            // KHÔNG gọi SaveChanges ở đây - để UnitOfWork quản lý
         }
     }
 }

@@ -316,9 +316,8 @@ else
             
             if (dealer != null)
             {
-                Console.WriteLine($"Dealer loaded: {dealer.DealerCode} - {dealer.DealerName}");
+                Console.WriteLine($"Dealer loaded: ID={dealer.DealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
                 
-                // Load dữ liệu vào form
                 if (dealer.EstablishedDate.HasValue)
                 {
                     establishedDate = dealer.EstablishedDate.Value.ToDateTime(TimeOnly.MinValue);
@@ -343,7 +342,12 @@ else
 
     private async Task HandleValidSubmit()
     {
-        if (dealer == null) return;
+        if (dealer == null)
+        {
+            Console.WriteLine("ERROR: dealer is null");
+            errorMessage = "Dữ liệu không hợp lệ!";
+            return;
+        }
 
         isSubmitting = true;
         errorMessage = null;
@@ -351,40 +355,87 @@ else
 
         try
         {
-            Console.WriteLine("=== Starting Update ===");
+            Console.WriteLine("=== HandleValidSubmit ===");
+            Console.WriteLine($"Dealer ID: {dealer.DealerId}");
+            Console.WriteLine($"DealerCode: {dealer.DealerCode}");
+            Console.WriteLine($"DealerName: {dealer.DealerName}");
+            Console.WriteLine($"Address: {dealer.Address}");
+            Console.WriteLine($"Phone: {dealer.Phone}");
+            Console.WriteLine($"Email: {dealer.Email}");
+            Console.WriteLine($"IsActive (UI): {isActive}");
+            Console.WriteLine($"EstablishedDate (UI): {establishedDate}");
+            Console.WriteLine($"TotalStaff: {dealer.TotalStaff}");
+            Console.WriteLine($"Rating: {dealer.Rating}");
+            
+            // Validate required fields
+            if (string.IsNullOrWhiteSpace(dealer.DealerCode))
+            {
+                errorMessage = "Mã đại lý không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.DealerName))
+            {
+                errorMessage = "Tên đại lý không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.Address))
+            {
+                errorMessage = "Địa chỉ không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.Phone))
+            {
+                errorMessage = "Số điện thoại không được để trống!";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(dealer.Email))
+            {
+                errorMessage = "Email không được để trống!";
+                return;
+            }
             
             // Convert DateTime? to DateOnly?
             if (establishedDate.HasValue)
             {
                 dealer.EstablishedDate = DateOnly.FromDateTime(establishedDate.Value);
+                Console.WriteLine($"EstablishedDate converted: {dealer.EstablishedDate}");
+            }
+            else
+            {
+                dealer.EstablishedDate = null;
+                Console.WriteLine("EstablishedDate is null");
             }
 
             // Set IsActive
             dealer.IsActive = isActive;
+            Console.WriteLine($"IsActive set to: {dealer.IsActive}");
 
-            // LastAudit sẽ được set trong Service
-            Console.WriteLine($"Updating dealer: ID={dealer.DealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
+            Console.WriteLine("Calling ServiceProviders.DealersHhtService.UpdateAsync...");
             
             // Gọi UpdateAsync từ Service
             var result = await ServiceProviders.DealersHhtService.UpdateAsync(dealer);
             
-            Console.WriteLine($"Update result: {result}");
+            Console.WriteLine($"=== UpdateAsync returned: {result} ===");
 
             if (result > 0)
             {
                 successMessage = "Cập nhật đại lý thành công!";
-                Console.WriteLine("Update successful!");
+                Console.WriteLine("✅ Update successful!");
             }
             else
             {
                 errorMessage = "Không thể cập nhật đại lý. Vui lòng thử lại!";
-                Console.WriteLine("Update failed - no records affected");
+                Console.WriteLine("❌ Update failed - result = 0");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"=== Update Error ===");
-            Console.WriteLine($"Error: {ex.Message}");
+            Console.WriteLine($"=== Exception in HandleValidSubmit ===");
+            Console.WriteLine($"Message: {ex.Message}");
             Console.WriteLine($"StackTrace: {ex.StackTrace}");
             
             var innerMessage = ex.InnerException?.Message ?? ex.Message;
@@ -399,18 +450,17 @@ else
         finally
         {
             isSubmitting = false;
+            StateHasChanged();
         }
     }
 
     private void ShowDeleteConfirmation()
     {
-        Console.WriteLine("Show delete confirmation modal");
         showDeleteModal = true;
     }
 
     private void CloseDeleteModal()
     {
-        Console.WriteLine("Close delete confirmation modal");
         showDeleteModal = false;
     }
 
@@ -422,34 +472,26 @@ else
         
         try
         {
-            Console.WriteLine($"=== Starting Delete ===");
-            Console.WriteLine($"Deleting dealer: ID={dealer.DealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
+            Console.WriteLine($"=== Deleting dealer ID: {dealer.DealerId} ===");
             
-            // Gọi DeleteAsync từ Service
             var result = await ServiceProviders.DealersHhtService.DeleteAsync(dealer.DealerId);
             
             Console.WriteLine($"Delete result: {result}");
             
             if (result)
             {
-                Console.WriteLine("Delete successful! Redirecting to list...");
-                // Redirect về list
                 Navigation.NavigateTo("/dealers");
             }
             else
             {
-                Console.WriteLine("Delete failed - no records affected");
                 errorMessage = "Không thể xóa đại lý. Vui lòng thử lại!";
                 CloseDeleteModal();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"=== Delete Error ===");
-            Console.WriteLine($"Error: {ex.Message}");
-            Console.WriteLine($"StackTrace: {ex.StackTrace}");
-            
-            errorMessage = $"Lỗi khi xóa đại lý: {ex.Message}";
+            Console.WriteLine($"Error deleting: {ex.Message}");
+            errorMessage = $"Lỗi: {ex.Message}";
             CloseDeleteModal();
         }
         finally
