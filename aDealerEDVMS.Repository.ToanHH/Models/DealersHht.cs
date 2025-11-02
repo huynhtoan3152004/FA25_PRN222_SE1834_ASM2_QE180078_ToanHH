@@ -7,7 +7,7 @@ namespace aDealerEDVMS.Repository.ToanHH.Models;
 
 public partial class DealersHht
 {
-    public int DealerId { get; set; }
+    public int ToandealerId { get; set; }
 
     public string DealerName { get; set; }
 

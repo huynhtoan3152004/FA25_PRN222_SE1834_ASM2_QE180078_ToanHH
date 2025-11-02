@@ -9,17 +9,17 @@ public partial class DealerContractsHht
 {
     public int ContractId { get; set; }
 
-    public int DealerId { get; set; }
+    public int ToandealerId { get; set; }
 
     public DateOnly StartDate { get; set; }
 
-    public DateOnly? EndDate { get; set; }
+    public DateOnly EndDate { get; set; }
 
-    public decimal? ContractValue { get; set; }
+    public decimal ContractValue { get; set; }
 
     public string Status { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
-    public virtual DealersHht Dealer { get; set; }
+    public virtual DealersHht Toandealer { get; set; }
 }

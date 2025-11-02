@@ -15,7 +15,7 @@ namespace aDealerEDVMS.Repository.ToanHH
         public async Task<List<DealerContractsHht>> GetAllAsync()
         {
             var items = await _context.DealerContractsHhts
-                .Include(dc => dc.Dealer)
+                .Include(dc => dc.Toandealer)
                 .ToListAsync();
 
             return items ?? new List<DealerContractsHht>();
@@ -25,7 +25,7 @@ namespace aDealerEDVMS.Repository.ToanHH
         public async Task<DealerContractsHht> GetByIdAsync(int contractId)
         {
             var contract = await _context.DealerContractsHhts
-                .Include(dc => dc.Dealer)
+                .Include(dc => dc.Toandealer)
                 .FirstOrDefaultAsync(dc => dc.ContractId == contractId);
 
             return contract ?? new DealerContractsHht();
@@ -35,10 +35,10 @@ namespace aDealerEDVMS.Repository.ToanHH
         public async Task<List<DealerContractsHht>> SearchAsync(string status, string dealerName)
         {
             var items = await _context.DealerContractsHhts
-                .Include(dc => dc.Dealer)
+                .Include(dc => dc.Toandealer)
                 .Where(dc =>
                     (dc.Status.Contains(status) || string.IsNullOrEmpty(status)) &&
-                    (dc.Dealer != null && (dc.Dealer.DealerName.Contains(dealerName) || string.IsNullOrEmpty(dealerName)))
+                    (dc.Toandealer != null && (dc.Toandealer.DealerName.Contains(dealerName) || string.IsNullOrEmpty(dealerName)))
                 )
                 .OrderByDescending(dc => dc.CreatedAt)
                 .ToListAsync();

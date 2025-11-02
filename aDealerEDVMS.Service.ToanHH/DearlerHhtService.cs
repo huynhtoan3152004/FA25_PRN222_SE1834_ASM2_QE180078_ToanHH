@@ -71,8 +71,8 @@ namespace aDealerEDVMS.Service.ToanHH
                 // FIX: Kiểm tra result từ SaveChanges (số record affected)
                 if (result > 0)
                 {
-                    Console.WriteLine($"Dealer created successfully with ID: {dealer.DealerId}");
-                    return dealer.DealerId;
+                    Console.WriteLine($"Dealer created successfully with ID: {dealer.ToandealerId}");
+                    return dealer.ToandealerId;
                 }
                 
                 Console.WriteLine("Failed to create dealer - no records affected");
@@ -106,7 +106,7 @@ namespace aDealerEDVMS.Service.ToanHH
             try
             {
                 Console.WriteLine("=== Starting UpdateAsync in Service ===");
-                Console.WriteLine($"Dealer ID: {dealer.DealerId}");
+                Console.WriteLine($"Dealer ID: {dealer.ToandealerId}");
                 Console.WriteLine($"DealerCode: {dealer.DealerCode}");
                 Console.WriteLine($"DealerName: {dealer.DealerName}");
                 Console.WriteLine($"Address: {dealer.Address}");
@@ -129,8 +129,8 @@ namespace aDealerEDVMS.Service.ToanHH
                 
                 if (result > 0)
                 {
-                    Console.WriteLine($"Dealer updated successfully: {dealer.DealerId}");
-                    return dealer.DealerId;
+                    Console.WriteLine($"Dealer updated successfully: {dealer.ToandealerId}");
+                    return dealer.ToandealerId;
                 }
                 
                 Console.WriteLine("Failed to update dealer - no records affected");

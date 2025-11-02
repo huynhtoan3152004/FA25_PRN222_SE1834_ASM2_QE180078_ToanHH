@@ -29,7 +29,7 @@ namespace aDealerEDVMS.Repository.ToanHH
                 // FIX: Thêm AsNoTracking để không track entity khi query
                 return await _context.DealersHhts
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(d => d.DealerId == dealerId);
+                    .FirstOrDefaultAsync(d => d.ToandealerId == dealerId);
             }
             catch (Exception ex)
             {
@@ -63,14 +63,14 @@ namespace aDealerEDVMS.Repository.ToanHH
         public async Task UpdateAsync(DealersHht dealer)
         {
             Console.WriteLine($"=== UpdateAsync in Repository ===");
-            Console.WriteLine($"Updating dealer ID: {dealer.DealerId}");
+            Console.WriteLine($"Updating dealer ID: {dealer.ToandealerId}");
             
             try
             {
                 // CÁCH 1: Detach entity cũ nếu có
                 var local = _context.Set<DealersHht>()
                     .Local
-                    .FirstOrDefault(e => e.DealerId == dealer.DealerId);
+                    .FirstOrDefault(e => e.ToandealerId == dealer.ToandealerId);
 
                 if (local != null)
                 {
@@ -98,11 +98,11 @@ namespace aDealerEDVMS.Repository.ToanHH
             try
             {
                 Console.WriteLine($"=== RemoveAsync in Repository ===");
-                Console.WriteLine($"Attempting to remove dealer ID: {entity.DealerId}");
+                Console.WriteLine($"Attempting to remove dealer ID: {entity.ToandealerId}");
                 
                 // FIX: Kiểm tra xem entity đã được track chưa
                 var trackedEntity = _context.DealersHhts.Local
-                    .FirstOrDefault(d => d.DealerId == entity.DealerId);
+                    .FirstOrDefault(d => d.ToandealerId == entity.ToandealerId);
                 
                 if (trackedEntity != null)
                 {

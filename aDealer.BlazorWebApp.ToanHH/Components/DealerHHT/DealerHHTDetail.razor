@@ -316,7 +316,7 @@ else
             
             if (dealer != null)
             {
-                Console.WriteLine($"Dealer loaded: ID={dealer.DealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
+                Console.WriteLine($"Dealer loaded: ID={dealer.ToandealerId}, Code={dealer.DealerCode}, Name={dealer.DealerName}");
                 
                 if (dealer.EstablishedDate.HasValue)
                 {
@@ -356,7 +356,7 @@ else
         try
         {
             Console.WriteLine("=== HandleValidSubmit ===");
-            Console.WriteLine($"Dealer ID: {dealer.DealerId}");
+            Console.WriteLine($"Dealer ID: {dealer.ToandealerId}");
             Console.WriteLine($"DealerCode: {dealer.DealerCode}");
             Console.WriteLine($"DealerName: {dealer.DealerName}");
             Console.WriteLine($"Address: {dealer.Address}");
@@ -472,9 +472,9 @@ else
         
         try
         {
-            Console.WriteLine($"=== Deleting dealer ID: {dealer.DealerId} ===");
+            Console.WriteLine($"=== Deleting dealer ID: {dealer.ToandealerId} ===");
             
-            var result = await ServiceProviders.DealersHhtService.DeleteAsync(dealer.DealerId);
+            var result = await ServiceProviders.DealersHhtService.DeleteAsync(dealer.ToandealerId);
             
             Console.WriteLine($"Delete result: {result}");
             

@@ -48,41 +48,42 @@ public partial class FA25_PRN221_SE1834_G5_EVDMSContext : DbContext
     {
         modelBuilder.Entity<DealerContractsHht>(entity =>
         {
-            entity.HasKey(e => e.ContractId).HasName("PK__DealerCo__F8D6642312FDF878");
+            entity.HasKey(e => e.ContractId).HasName("PK__DealerCo__F8D664232FE9CE7F");
 
             entity.ToTable("DealerContracts_HHT");
 
             entity.Property(e => e.ContractId).HasColumnName("contract_id");
             entity.Property(e => e.ContractValue)
-                .HasColumnType("decimal(12, 2)")
+                .HasColumnType("decimal(18, 2)")
                 .HasColumnName("contract_value");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.DealerId).HasColumnName("dealer_id");
             entity.Property(e => e.EndDate).HasColumnName("end_date");
             entity.Property(e => e.StartDate).HasColumnName("start_date");
             entity.Property(e => e.Status)
-                .HasMaxLength(20)
+                .IsRequired()
+                .HasMaxLength(50)
                 .HasColumnName("status");
+            entity.Property(e => e.ToandealerId).HasColumnName("toandealer_id");
 
-            entity.HasOne(d => d.Dealer).WithMany(p => p.DealerContractsHhts)
-                .HasForeignKey(d => d.DealerId)
+            entity.HasOne(d => d.Toandealer).WithMany(p => p.DealerContractsHhts)
+                .HasForeignKey(d => d.ToandealerId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__DealerCon__deale__3F466844");
+                .HasConstraintName("FK_DealerContracts_HHT_Dealers_HHT");
         });
 
         modelBuilder.Entity<DealersHht>(entity =>
         {
-            entity.HasKey(e => e.DealerId).HasName("PK__Dealers___019990C0D83E4E31");
+            entity.HasKey(e => e.ToandealerId).HasName("PK__Dealers___6EE3ADFBDCF53B5F");
 
             entity.ToTable("Dealers_HHT");
 
-            entity.HasIndex(e => e.DealerCode, "UQ__Dealers___9BF9673DA1C3C63C").IsUnique();
-
-            entity.Property(e => e.DealerId).HasColumnName("dealer_id");
-            entity.Property(e => e.Address).HasColumnName("address");
+            entity.Property(e => e.ToandealerId).HasColumnName("toandealer_id");
+            entity.Property(e => e.Address)
+                .HasMaxLength(255)
+                .HasColumnName("address");
             entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.DealerCode)
                 .IsRequired()
@@ -90,23 +91,24 @@ public partial class FA25_PRN221_SE1834_G5_EVDMSContext : DbContext
                 .HasColumnName("dealer_code");
             entity.Property(e => e.DealerName)
                 .IsRequired()
-                .HasMaxLength(200)
+                .HasMaxLength(255)
                 .HasColumnName("dealer_name");
             entity.Property(e => e.Email)
-                .HasMaxLength(150)
+                .HasMaxLength(255)
                 .HasColumnName("email");
             entity.Property(e => e.EstablishedDate).HasColumnName("established_date");
             entity.Property(e => e.IsActive)
                 .HasDefaultValue(true)
                 .HasColumnName("is_active");
             entity.Property(e => e.LastAudit)
+                .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("last_audit");
             entity.Property(e => e.Phone)
-                .HasMaxLength(20)
+                .HasMaxLength(50)
                 .HasColumnName("phone");
             entity.Property(e => e.Rating)
-                .HasColumnType("decimal(3, 2)")
+                .HasColumnType("decimal(5, 2)")
                 .HasColumnName("rating");
             entity.Property(e => e.TotalStaff)
                 .HasDefaultValue(0)
